@@ -14,6 +14,8 @@ local DrawingLib = typeof(Drawing) == "table" and Drawing or { drawing_replaced 
 local ProtectGui = protectgui or (function() end);
 local GetHUI = gethui or (function() return CoreGui end);
 
+local IsBadDrawingLib = false;
+
 local ScreenGui = Instance.new('ScreenGui');
 pcall(ProtectGui, ScreenGui);
 
@@ -144,17 +146,17 @@ end;
 local function GetPlayers(ExcludeLocalPlayer, ReturnInstances)
     local PlayerList = Players:GetPlayers();
 
-	if ExcludeLocalPlayer then
-		local Idx = table.find(PlayerList, LocalPlayer);
+    if ExcludeLocalPlayer then
+        local Idx = table.find(PlayerList, LocalPlayer);
 
-		if Idx then
-			table.remove(PlayerList, Idx);
-		end
-	end
+        if Idx then
+            table.remove(PlayerList, Idx);
+        end
+    end
 
-	table.sort(PlayerList, function(Player1, Player2)
-		return Player1.Name:lower() < Player2.Name:lower();
-	end)
+    table.sort(PlayerList, function(Player1, Player2)
+        return Player1.Name:lower() < Player2.Name:lower();
+    end)
 
     if ReturnInstances == true then
         return PlayerList;
@@ -171,9 +173,9 @@ end;
 local function GetTeams(ReturnInstances)
     local TeamList = Teams:GetTeams();
 
-	table.sort(TeamList, function(Team1, Team2)
-		return Team1.Name:lower() < Team2.Name:lower();
-	end)
+    table.sort(TeamList, function(Team1, Team2)
+        return Team1.Name:lower() < Team2.Name:lower();
+    end)
 
     if ReturnInstances == true then
         return TeamList;
@@ -195,9 +197,9 @@ function Library:SetDPIScale(value: number)
 end;
 
 function Library:SafeCallback(Func, ...)
-	if not (Func and typeof(Func) == "function") then
-		return
-	end
+    if not (Func and typeof(Func) == "function") then
+        return
+    end
 
     local run = function(func, ...)
         local Success, Response = pcall(func, ...)
@@ -764,6 +766,7 @@ function Library:Unload()
         Library:SafeCallback(UnloadCallback)
     end
 
+    getgenv().Linoria = nil
     ScreenGui:Destroy()
 end
 
@@ -778,7 +781,11 @@ Library:GiveSignal(ScreenGui.DescendantRemoving:Connect(function(Instance)
 end))
 
 local function Trim(Text: string)
-	return Text:match("^%s*(.-)%s*$")
+    if Text == nil then
+        return "";
+    end
+
+    return tostring(Text):match("^%s*(.-)%s*$")
 end
 
 local BaseAddons = {};
@@ -1451,7 +1458,7 @@ do
         local ModeSelectOuter = Library:Create('Frame', {
             BorderColor3 = Color3.new(0, 0, 0);
             Position = UDim2.fromOffset(ToggleLabel.AbsolutePosition.X + ToggleLabel.AbsoluteSize.X + 4, ToggleLabel.AbsolutePosition.Y + 1);
-            Size = UDim2.new(0, 60, 0, 45 + 2);
+            Size = UDim2.new(0, 60, 0, 2);
             Visible = false;
             ZIndex = 14;
             Parent = ScreenGui;
@@ -1565,7 +1572,7 @@ do
             end;
 
             function KeybindsToggle:SetText(Text)
-				KeybindsToggleLabel.Text = Text
+                KeybindsToggleLabel.Text = Text
             end
 
             function KeybindsToggle:SetVisibility(bool)
@@ -1609,6 +1616,7 @@ do
                 ZIndex = 16;
                 Parent = ModeSelectInner;
             });
+            ModeSelectOuter.Size = ModeSelectOuter.Size + UDim2.new(0, 0, 0, 17)
 
             function ModeButton:Select()
                 for _, Button in next, ModeButtons do
@@ -1653,7 +1661,7 @@ do
             local ShowToggle = Library.ShowToggleFrameInKeybinds and KeyPicker.Mode == 'Toggle';
 
             if KeybindsToggle.Loaded then
-		        KeybindsToggle:SetNormal(not ShowToggle)
+                KeybindsToggle:SetNormal(not ShowToggle)
 
                 KeybindsToggle:SetVisibility(true);
                 KeybindsToggle:SetText(string.format('[%s] %s (%s)', KeyPicker.Value, Info.Text, KeyPicker.Mode));
@@ -1695,9 +1703,10 @@ do
 
                 local Key = KeyPicker.Value;
 
-                if Key == 'MB1' or Key == 'MB2' then
-                    return Key == 'MB1' and InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1)
-                        or Key == 'MB2' and InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2);
+                if Key == 'MB1' then
+                    return InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1)
+                elseif Key == 'MB2' then
+                    return InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2);
                 else
                     return InputService:IsKeyDown(Enum.KeyCode[KeyPicker.Value]) and not InputService:GetFocusedTextBox();
                 end;
@@ -2260,16 +2269,16 @@ do
 
         function Dropdown:AddValues(NewValues)
             if typeof(NewValues) == "table" then
-				for _, val in pairs(NewValues) do
-					table.insert(Dropdown.Values, val);
-				end
-			elseif typeof(NewValues) == "string" then
-				table.insert(Dropdown.Values, NewValues);
-			else
-				return;
-			end
+                for _, val in pairs(NewValues) do
+                    table.insert(Dropdown.Values, val);
+                end
+            elseif typeof(NewValues) == "string" then
+                table.insert(Dropdown.Values, NewValues);
+            else
+                return;
+            end
 
-			Dropdown:BuildDropdownList();
+            Dropdown:BuildDropdownList();
         end;
 
         function Dropdown:SetDisabledValues(NewValues)
@@ -2281,18 +2290,18 @@ do
         end
 
         function Dropdown:AddDisabledValues(DisabledValues)
-			if typeof(DisabledValues) == "table" then
-				for _, val in pairs(DisabledValues) do
-					table.insert(Dropdown.DisabledValues, val)
-				end
-			elseif typeof(DisabledValues) == "string" then
-				table.insert(Dropdown.DisabledValues, DisabledValues)
-			else
-				return
-			end
+            if typeof(DisabledValues) == "table" then
+                for _, val in pairs(DisabledValues) do
+                    table.insert(Dropdown.DisabledValues, val)
+                end
+            elseif typeof(DisabledValues) == "string" then
+                table.insert(Dropdown.DisabledValues, DisabledValues)
+            else
+                return
+            end
 
-			Dropdown:BuildDropdownList()
-		end
+            Dropdown:BuildDropdownList()
+        end
 
         function Dropdown:SetVisible(Visibility)
             Dropdown.Visible = Visibility;
@@ -2508,21 +2517,21 @@ do
     function BaseGroupboxFuncs:AddLabel(...)
         local Data = {}
 
-    	if select(2, ...) ~= nil and typeof(select(2, ...)) == "table" then
+        if select(2, ...) ~= nil and typeof(select(2, ...)) == "table" then
             if select(1, ...) ~= nil then
                 assert(typeof(select(1, ...)) == "string", "Expected string for Idx, got " .. typeof(select(1, ...)))
             end
             
-    		local Params = select(2, ...)
+            local Params = select(2, ...)
 
-    		Data.Text = Params.Text or ""
-    		Data.DoesWrap = Params.DoesWrap or false
-    		Data.Idx = select(1, ...)
-    	else
-    		Data.Text = select(1, ...) or ""
-    		Data.DoesWrap = select(2, ...) or false
+            Data.Text = Params.Text or ""
+            Data.DoesWrap = Params.DoesWrap or false
+            Data.Idx = select(1, ...)
+        else
+            Data.Text = select(1, ...) or ""
+            Data.DoesWrap = select(2, ...) or false
             Data.Idx = select(3, ...) or nil
-    	end
+        end
 
         Data.OriginalText = Data.Text;
         
@@ -2897,7 +2906,7 @@ do
             Finished = Info.Finished or false;
             Visible = if typeof(Info.Visible) == "boolean" then Info.Visible else true;
             Disabled = if typeof(Info.Disabled) == "boolean" then Info.Disabled else false;
-	    AllowEmpty = if typeof(Info.AllowEmpty) == "boolean" then Info.AllowEmpty else true;
+        AllowEmpty = if typeof(Info.AllowEmpty) == "boolean" then Info.AllowEmpty else true;
             EmptyReset = if typeof(Info.EmptyReset) == "string" then Info.EmptyReset else "---";
             Type = 'Input';
 
@@ -3026,9 +3035,9 @@ do
         end;
 
         function Textbox:SetValue(Text)
-	    if not Textbox.AllowEmpty and Trim(Text) == "" then
-		Text = Textbox.EmptyReset;
-	    end
+        if not Textbox.AllowEmpty and Trim(Text) == "" then
+        Text = Textbox.EmptyReset;
+        end
 
             if Info.MaxLength and #Text > Info.MaxLength then
                 Text = Text:sub(1, Info.MaxLength);
@@ -4115,12 +4124,40 @@ do
             Dropdown:BuildDropdownList();
         end;
 
+        function Dropdown:AddValues(NewValues)
+            if typeof(NewValues) == "table" then
+                for _, val in pairs(NewValues) do
+                    table.insert(Dropdown.Values, val);
+                end
+            elseif typeof(NewValues) == "string" then
+                table.insert(Dropdown.Values, NewValues);
+            else
+                return;
+            end
+
+            Dropdown:BuildDropdownList();
+        end;
+
         function Dropdown:SetDisabledValues(NewValues)
             if NewValues then
                 Dropdown.DisabledValues = NewValues;
             end;
 
             Dropdown:BuildDropdownList();
+        end
+
+        function Dropdown:AddDisabledValues(DisabledValues)
+            if typeof(DisabledValues) == "table" then
+                for _, val in pairs(DisabledValues) do
+                    table.insert(Dropdown.DisabledValues, val)
+                end
+            elseif typeof(DisabledValues) == "string" then
+                table.insert(Dropdown.DisabledValues, DisabledValues)
+            else
+                return
+            end
+
+            Dropdown:BuildDropdownList()
         end
 
         function Dropdown:SetVisible(Visibility)
@@ -4580,37 +4617,26 @@ function Library:SetWatermark(Text)
 end;
 
 function Library:SetNotifySide(Side: string)
-	Library.NotifySide = Side;
+    Library.NotifySide = Side;
 end;
 
 function Library:Notify(...)
-    local Data = {}
+    local Data = { Steps = 1 }
     local Info = select(1, ...)
 
-	if typeof(Info) == "table" then
-		Data.Title = tostring(Info.Title)
-		Data.Description = (if Data.Title == "" then "" else "[" .. Data.Title .. "] ") .. tostring(Info.Description)
-		Data.Time = Info.Time or 5
-		Data.SoundId = Info.SoundId
-	else
-		Data.Description = tostring(Info)
-		Data.Time = select(2, ...) or 5
-		Data.SoundId = select(3, ...)
-	end
+    if typeof(Info) == "table" then
+        Data.Title = tostring(Info.Title)
+        Data.Description = tostring(Info.Description)
+        Data.Time = Info.Time or 5
+        Data.SoundId = Info.SoundId
+    else
+        Data.Description = tostring(Info)
+        Data.Time = select(2, ...) or 5
+        Data.SoundId = select(3, ...)
+    end
     
     local Side = string.lower(Library.NotifySide);
-
-    if Side == "right" then
-        Library:RightNotify(Data.Description, Data.Time, Data.SoundId);
-    else
-        Library:LeftNotify(Data.Description, Data.Time, Data.SoundId);
-    end
-end;
-
-function Library:LeftNotify(Text, Time, SoundId)
-    Text = tostring(Text);
-    local XSize, YSize = Library:GetTextBounds(Text, Library.Font, 14);
-
+    local XSize, YSize = Library:GetTextBounds(Data.Description, Library.Font, 14);
     YSize = YSize + 7
 
     local NotifyOuter = Library:Create('Frame', {
@@ -4618,7 +4644,7 @@ function Library:LeftNotify(Text, Time, SoundId)
         Size = UDim2.new(0, 0, 0, YSize);
         ClipsDescendants = true;
         ZIndex = 100;
-        Parent = Library.LeftNotificationArea;
+        Parent = if Side == "left" then Library.LeftNotificationArea else Library.RightNotificationArea;
     });
 
     local NotifyInner = Library:Create('Frame', {
@@ -4663,10 +4689,11 @@ function Library:LeftNotify(Text, Time, SoundId)
     });
 
     local NotifyLabel = Library:CreateLabel({
-        Position = UDim2.new(0, 4, 0, 0);
+        AnchorPoint = if Side == "left" then Vector2.new(0, 0) else Vector2.new(1, 0);
+        Position = if Side == "left" then UDim2.new(0, 4, 0, 0) else UDim2.new(1, -4, 0, 0);
         Size = UDim2.new(1, -4, 1, 0);
-        Text = Text;
-        TextXAlignment = Enum.TextXAlignment.Left;
+        Text = (if Trim(Data["Title"]) == "" then "" else "[" .. tostring(Data.Title) .. "] ") .. tostring(Data.Description);
+        TextXAlignment = if Side == "left" then Enum.TextXAlignment.Left else Enum.TextXAlignment.Right;
         TextSize = 14;
         ZIndex = 103;
         RichText = true;
@@ -4674,21 +4701,54 @@ function Library:LeftNotify(Text, Time, SoundId)
     });
 
     local SideColor = Library:Create('Frame', {
+        AnchorPoint = if Side == "left" then Vector2.new(0, 0) else Vector2.new(1, 0);
+        Position = if Side == "left" then UDim2.new(0, -1, 0, -1) else UDim2.new(1, -1, 0, -1);
         BackgroundColor3 = Library.AccentColor;
         BorderSizePixel = 0;
-        Position = UDim2.new(0, -1, 0, -1);
         Size = UDim2.new(0, 3, 1, 2);
         ZIndex = 104;
         Parent = NotifyOuter;
     });
 
+    function Data:Resize()
+        XSize, YSize = Library:GetTextBounds(NotifyLabel.Text, Library.Font, 14);
+        YSize = YSize + 7
+    
+        pcall(NotifyOuter.TweenSize, NotifyOuter, UDim2.new(0, XSize * DPIScale + 8 + 4, 0, YSize), 'Out', 'Quad', 0.4, true);
+    end
+
+    function Data:ChangeTitle(NewText)
+        NewText = if NewText == nil then "" else tostring(NewText);
+
+        Data.Title = NewText;
+        NotifyLabel.Text = (if Trim(Data["Title"]) == "" then "" else "[" .. tostring(Data.Title) .. "] ") .. tostring(Data.Description);
+
+        Data:Resize();
+    end
+
+    function Data:ChangeDescription(NewText)
+        if NewText == nil then return end
+        NewText = tostring(NewText);
+
+        Data.Description = NewText;
+        NotifyLabel.Text = (if Trim(Data["Title"]) == "" then "" else "[" .. tostring(Data.Title) .. "] ") .. tostring(Data.Description);
+
+        Data:Resize();
+    end
+
+    function Data:ChangeStep()
+        -- this is supposed to be empty
+    end
+
+    Data:Resize();
+
     Library:AddToRegistry(SideColor, {
         BackgroundColor3 = 'AccentColor';
     }, true);
 
-    if SoundId then
+    if Data.SoundId then
         Library:Create('Sound', {
-            SoundId = "rbxassetid://" .. tostring(SoundId):gsub("rbxassetid://", "");
+            SoundId = "rbxassetid://" .. tostring(Data.SoundId):gsub("rbxassetid://", "");
             Volume = 3;
             PlayOnRemove = true;
             Parent = game:GetService("SoundService");
@@ -4698,125 +4758,18 @@ function Library:LeftNotify(Text, Time, SoundId)
     pcall(NotifyOuter.TweenSize, NotifyOuter, UDim2.new(0, XSize * DPIScale + 8 + 4, 0, YSize), 'Out', 'Quad', 0.4, true);
 
     task.spawn(function()
-        if typeof(Time) == "Instance" then
-            Time.Destroying:Wait();
+        if typeof(Data.Time) == "Instance" then
+            Data.Time.Destroying:Wait();
         else
-            task.wait(Time or 5);
+            task.wait(Data.Time or 5);
         end
 
         pcall(NotifyOuter.TweenSize, NotifyOuter, UDim2.new(0, 0, 0, YSize), 'Out', 'Quad', 0.4, true);
-
         task.wait(0.4);
-
         NotifyOuter:Destroy();
     end);
-end;
 
-function Library:RightNotify(Text, Time, SoundId)
-    Text = tostring(Text);
-    local XSize, YSize = Library:GetTextBounds(Text, Library.Font, 14);
-
-    YSize = YSize + 7
-
-    local NotifyOuter = Library:Create('Frame', {
-        BorderColor3 = Color3.new(0, 0, 0);
-        Size = UDim2.new(0, 0, 0, YSize);
-        ClipsDescendants = true;
-        ZIndex = 100;
-        Parent = Library.RightNotificationArea;
-    });
-
-    local NotifyInner = Library:Create('Frame', {
-        BackgroundColor3 = Library.MainColor;
-        BorderColor3 = Library.OutlineColor;
-        BorderMode = Enum.BorderMode.Inset;
-        Size = UDim2.new(1, 0, 1, 0);
-        ZIndex = 101;
-        Parent = NotifyOuter;
-    });
-
-    Library:AddToRegistry(NotifyInner, {
-        BackgroundColor3 = 'MainColor';
-        BorderColor3 = 'OutlineColor';
-    }, true);
-
-    local InnerFrame = Library:Create('Frame', {
-        BackgroundColor3 = Color3.new(1, 1, 1);
-        BorderSizePixel = 0;
-        Position = UDim2.new(0, 1, 0, 1);
-        Size = UDim2.new(1, -2, 1, -2);
-        ZIndex = 102;
-        Parent = NotifyInner;
-    });
-
-    local Gradient = Library:Create('UIGradient', {
-        Color = ColorSequence.new({
-            ColorSequenceKeypoint.new(0, Library:GetDarkerColor(Library.MainColor)),
-            ColorSequenceKeypoint.new(1, Library.MainColor),
-        });
-        Rotation = -90;
-        Parent = InnerFrame;
-    });
-
-    Library:AddToRegistry(Gradient, {
-        Color = function()
-            return ColorSequence.new({
-                ColorSequenceKeypoint.new(0, Library:GetDarkerColor(Library.MainColor)),
-                ColorSequenceKeypoint.new(1, Library.MainColor),
-            });
-        end
-    });
-
-    local NotifyLabel = Library:CreateLabel({
-        AnchorPoint = Vector2.new(1, 0);
-        Position = UDim2.new(1, -4, 0, 0);
-        Size = UDim2.new(1, -4, 1, 0);
-        Text = Text;
-        TextXAlignment = Enum.TextXAlignment.Right;
-        TextSize = 14;
-        ZIndex = 103;
-        RichText = true;
-        Parent = InnerFrame;
-    });
-
-    local SideColor = Library:Create('Frame', {
-        AnchorPoint = Vector2.new(1, 0);
-        BackgroundColor3 = Library.AccentColor;
-        BorderSizePixel = 0;
-        Position = UDim2.new(1, -1, 0, -1);
-        Size = UDim2.new(0, 3, 1, 2);
-        ZIndex = 104;
-        Parent = NotifyOuter;
-    });
-
-    Library:AddToRegistry(SideColor, {
-        BackgroundColor3 = 'AccentColor';
-    }, true);
-
-    if SoundId then
-        Library:Create('Sound', {
-            SoundId = "rbxassetid://" .. tostring(SoundId):gsub("rbxassetid://", "");
-            Volume = 3;
-            PlayOnRemove = true;
-            Parent = game:GetService("SoundService");
-        }):Destroy();
-    end
-
-    pcall(NotifyOuter.TweenSize, NotifyOuter, UDim2.new(0, XSize * DPIScale + 8 + 4, 0, YSize), 'Out', 'Quad', 0.4, true);
-
-    task.spawn(function()
-        if typeof(Time) == "Instance" then
-            Time.Destroying:Wait();
-        else
-            task.wait(Time or 5);
-        end
-
-        pcall(NotifyOuter.TweenSize, NotifyOuter, UDim2.new(0, 0, 0, YSize), 'Out', 'Quad', 0.4, true);
-
-        task.wait(0.4);
-
-        NotifyOuter:Destroy();
-    end);
+    return Data
 end;
 
 function Library:CreateWindow(...)
@@ -5647,41 +5600,43 @@ function Library:CreateWindow(...)
             -- A bit scuffed, but if we're going from not toggled -> toggled we want to show the frame immediately so that the fade is visible.
             Outer.Visible = true;
 
-            if DrawingLib.drawing_replaced ~= true then
-                local Cursor = DrawingLib.new("Triangle")
-                Cursor.Thickness = 1
-                Cursor.Filled = true
-                Cursor.Visible = Library.ShowCustomCursor
-
-                local CursorOutline = DrawingLib.new("Triangle")
-                CursorOutline.Thickness = 1
-                CursorOutline.Filled = false
-                CursorOutline.Color = Color3.new(0, 0, 0)
-                CursorOutline.Visible = Library.ShowCustomCursor
-                
-                local OldMouseIconState = InputService.MouseIconEnabled
-                pcall(function() RunService:UnbindFromRenderStep("LinoriaCursor") end)
-                RunService:BindToRenderStep("LinoriaCursor", Enum.RenderPriority.Camera.Value - 1, function()
-                    InputService.MouseIconEnabled = not Library.ShowCustomCursor
-                    local mPos = InputService:GetMouseLocation()
-                    local X, Y = mPos.X, mPos.Y
-                    Cursor.Color = Library.AccentColor
-                    Cursor.PointA = Vector2.new(X, Y)
-                    Cursor.PointB = Vector2.new(X + 16, Y + 6)
-                    Cursor.PointC = Vector2.new(X + 6, Y + 16)
+            if DrawingLib.drawing_replaced ~= true and IsBadDrawingLib ~= true then
+                IsBadDrawingLib = not (pcall(function()
+                    local Cursor = DrawingLib.new("Triangle")
+                    Cursor.Thickness = 1
+                    Cursor.Filled = true
                     Cursor.Visible = Library.ShowCustomCursor
-                    CursorOutline.PointA = Cursor.PointA
-                    CursorOutline.PointB = Cursor.PointB
-                    CursorOutline.PointC = Cursor.PointC
-                    CursorOutline.Visible = Library.ShowCustomCursor
 
-                    if not Toggled or (not ScreenGui or not ScreenGui.Parent) then
-                        InputService.MouseIconEnabled = OldMouseIconState
-                        if Cursor then Cursor:Destroy() end
-                        if CursorOutline then CursorOutline:Destroy() end
-                        RunService:UnbindFromRenderStep("LinoriaCursor")
-                    end
-                end)
+                    local CursorOutline = DrawingLib.new("Triangle")
+                    CursorOutline.Thickness = 1
+                    CursorOutline.Filled = false
+                    CursorOutline.Color = Color3.new(0, 0, 0)
+                    CursorOutline.Visible = Library.ShowCustomCursor
+                    
+                    local OldMouseIconState = InputService.MouseIconEnabled
+                    pcall(function() RunService:UnbindFromRenderStep("LinoriaCursor") end)
+                    RunService:BindToRenderStep("LinoriaCursor", Enum.RenderPriority.Camera.Value - 1, function()
+                        InputService.MouseIconEnabled = not Library.ShowCustomCursor
+                        local mPos = InputService:GetMouseLocation()
+                        local X, Y = mPos.X, mPos.Y
+                        Cursor.Color = Library.AccentColor
+                        Cursor.PointA = Vector2.new(X, Y)
+                        Cursor.PointB = Vector2.new(X + 16, Y + 6)
+                        Cursor.PointC = Vector2.new(X + 6, Y + 16)
+                        Cursor.Visible = Library.ShowCustomCursor
+                        CursorOutline.PointA = Cursor.PointA
+                        CursorOutline.PointB = Cursor.PointB
+                        CursorOutline.PointC = Cursor.PointC
+                        CursorOutline.Visible = Library.ShowCustomCursor
+
+                        if not Toggled or (not ScreenGui or not ScreenGui.Parent) then
+                            InputService.MouseIconEnabled = OldMouseIconState
+                            if Cursor then Cursor:Destroy() end
+                            if CursorOutline then CursorOutline:Destroy() end
+                            RunService:UnbindFromRenderStep("LinoriaCursor")
+                        end
+                    end)
+                end));
             end
         end;
 
