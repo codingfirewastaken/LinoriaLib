@@ -4804,6 +4804,37 @@ function Library:CreateWindow(...)
         Config.TabPadding = 1
     end
 
+local RainbowBar = Instance.new('Frame')
+    RainbowBar.Name = 'RainbowBar'
+    RainbowBar.Size = UDim2.new(1, 0, 0, 5) -- Full width, 5px height
+    RainbowBar.Position = UDim2.new(0, 0, 0, 0) -- Top of the Main frame
+    RainbowBar.BackgroundColor3 = Color3.fromRGB(255, 255, 255) -- Base for gradient
+    RainbowBar.BorderSizePixel = 0
+    RainbowBar.Parent = Main
+
+    local Gradient = Instance.new('UIGradient')
+    Gradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 0, 0)),    -- Red
+        ColorSequenceKeypoint.new(0.17, Color3.fromRGB(255, 127, 0)), -- Orange
+        ColorSequenceKeypoint.new(0.33, Color3.fromRGB(255, 255, 0)), -- Yellow
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 255, 0)),   -- Green
+        ColorSequenceKeypoint.new(0.67, Color3.fromRGB(0, 0, 255)),  -- Blue
+        ColorSequenceKeypoint.new(0.83, Color3.fromRGB(75, 0, 130)), -- Indigo
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(148, 0, 211))   -- Violet
+    })
+    Gradient.Rotation = 0 -- Horizontal gradient
+    Gradient.Parent = RainbowBar
+
+    -- Adjust existing elements (e.g., Topbar) to avoid overlap
+    local Topbar = Instance.new('Frame')
+    Topbar.Name = 'Topbar'
+    Topbar.Size = UDim2.new(1, 0, 0, 30)
+    Topbar.Position = UDim2.new(0, 0, 0, 5) -- Shift down by 5px to sit below rainbow bar
+    Topbar.BackgroundColor3 = Library.MainColor
+    Topbar.BorderSizePixel = 0
+    Topbar.ZIndex = 2
+    Topbar.Parent = Main
+
     if Config.Center then
         -- Config.AnchorPoint = Vector2.new(0.5, 0.5)
         Config.Position = UDim2.new(0.5, -Config.Size.X.Offset/2, 0.5, -Config.Size.Y.Offset/2)
